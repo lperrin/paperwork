@@ -1,0 +1,11 @@
+{
+  "name": "paperwork",
+  "version": "1.0.0",
+  "dependencies": {
+    "underscore": "*"
+  },
+  "devDependencies": {
+    "mocha": "*",
+    "should": "*"
+  }
+}
