@@ -22,7 +22,7 @@ var invalid = module.exports.invalid = function (blob, specs) {
     throw new Error('specs must be an object');
 
   if(!_(blob).isObject())
-    return ['empty'];
+    return _(specs).keys();
 
   return _.chain(specs).keys().reject(function check(field) {
     var spec = specs[field],
@@ -38,6 +38,14 @@ function Optional(spec) {
 
 module.exports.optional = function (spec) {
   return new Optional(spec);
+};
+
+function Multiple(specs) {
+  this.specs = specs;
+}
+
+module.exports.all = function () {
+  return new Multiple(Array.prototype.slice.call(arguments));
 };
 
 function checkSpec(spec, val) {
@@ -58,6 +66,12 @@ function checkSpec(spec, val) {
 
   if(spec === Number)
     return typeof(val) === 'number';
+
+  if(spec instanceof Multiple) {
+    return _.every(spec.specs, function (spec) {
+      return checkSpec(spec, val);
+    });
+  }
 
   if(_.isFunction(spec))
     return spec(val);

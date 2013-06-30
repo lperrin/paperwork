@@ -20,7 +20,7 @@ Simple ! Just write a JSON template:
 
 ```javascript
 var blogPostTemplate = {
-  id: Number,
+  article_id: Number,
   title: String,
   body: String,
   publish_immediately: Boolean,
@@ -59,6 +59,7 @@ var userProfileTemplate = {
   email: /[^@]+@[^@]+/,                    // validates only strings matching this regex
   name: String,
   age: Number,
+  admin: Boolean,
   phone: paperwork.optional(String),       // makes the field optional
   country: paperwork.optional(/[a-z]{2}/)
 };
@@ -92,11 +93,8 @@ var betterUserProfile = {
 var evenBetterUserProfile = {
   email: /[^@]+@[^@]+/,
   name: String,
-  age: paperwork.multiple({
-    'must be a number': Number,
-    'must be positive': function (age) {
-      return age > 0;
-    }
-  }
+  age: paperwork.all(Number, function (age) {
+    return age > 0;
+  })
 };
 ```
