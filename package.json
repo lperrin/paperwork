@@ -2,7 +2,7 @@
   "name": "paperwork",
   "description": "Lightweight JSON validation for REST APIs.",
   "keywords": ["rest", "validation", "json", "api", "express"],
-  "version": "1.0.0",
+  "version": "1.0.1",
   "author": "Laurent Perrin <laurent.perrin@gmail.com>",
   "main": "./paperwork.js",
   "repository": {

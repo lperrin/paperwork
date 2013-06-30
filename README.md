@@ -28,13 +28,17 @@ var blogPostTemplate = {
 };
 ```
 
-You can then validate JSON like that:
+You can then validate JSON like that. It will return an array of missing or incorrect fields. The array is of course empty is everything is OK:
 
 ```javascript
-var result = paperwork.invalid(incomingPost, blogPostTemplate);
-```
+var invalidFields = paperwork.invalid(incomingPost, blogPostTemplate);
 
-It will return false if the JSON is correct, or an array of strings otherwise.
+if(!invalidFields) {
+  // JSON was validated
+} else {
+  // invalidFields is the list of incorrect fields
+}
+```
 
 Express integration
 -------------------
