@@ -16,7 +16,9 @@ If you build a REST API with node.js, you'll end up validating JSON sooner or la
 Install
 -------
 
-`npm install paperwork`
+```
+npm install paperwork
+```
 
 How it works
 ------------
