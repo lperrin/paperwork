@@ -31,7 +31,7 @@ var blogPostTemplate = {
 You can then validate JSON like that. It will return an array of missing or incorrect fields. The array is of course empty is everything is OK:
 
 ```javascript
-paperwork(incomingPost, blogPostTemplate, function (err, validated) {
+paperwork(blogPostTemplate, incomingPost, function (err, validated) {
   if (err) {
     // err is the list of incorrect fields
     console.error(err);
