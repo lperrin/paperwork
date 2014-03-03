@@ -31,13 +31,14 @@ var blogPostTemplate = {
 You can then validate JSON like that. It will return an array of missing or incorrect fields. The array is of course empty is everything is OK:
 
 ```javascript
-var invalidFields = paperwork.invalid(incomingPost, blogPostTemplate);
-
-if(!invalidFields) {
-  // JSON was validated
-} else {
-  // invalidFields is the list of incorrect fields
-}
+var invalidFields = paperwork(incomingPost, blogPostTemplate, function (err, validated) {
+  if (err) {
+    // err is the list of incorrect fields
+    console.error(err);
+  } else {
+    // JSON was validated, extra fields were removed.
+  }
+});
 ```
 
 Express integration
@@ -46,12 +47,35 @@ Express integration
 If you're using [Express](http://expressjs.com), things are even simpler:
 
 ```javascript
-app.post('/post', paperwork(blogPostTemplate), function (req, res) {
-  // req.body is now validated
+app.post('/post', paperwork.accept(blogPostTemplate), function (req, res) {
+  // req.body is now validated: you can use it without checking anything
 });
 ```
 
-Invalid requests will receive an HTTP 400 response and will be silently rejected.
+Invalid requests will receive an HTTP 400 response and will be silently rejected. The response will contain a helpful message indicating what was wrong:
+
+```javascript
+{
+  "status": "bad_request",
+  "reason": "Body did not satisfy requirements",
+  "errors": [
+    "body.alias: should match /^[a-z0-9]+$/",
+    "body.name: missing",
+    "body.admin: should be a boolean",
+    "body.age: should be a number"
+  ]
+}
+```
+
+Changes from 1.x
+----------------
+
+- Paperwork now silently removes unknown fields from the validated blob. This is done so you never pass unvalidated data to your code. For instance, if an attacker was to pass an extra `id`, you might end up using it to update the wrong object in your database.
+
+- Paperwork now accepts an (error, validated) callback. It will pass either an error (the list of fields that did not match your requirements) or a validated JSON.
+
+- You must now pass `paperwork.accept` to Express.
+
 
 Advanced Usage
 --------------

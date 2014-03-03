@@ -2,195 +2,355 @@ var should = require('should'),
     paperwork = require('../paperwork');
 
 describe('Paperwork', function () {
-  var blogPostTemplate = {
-    article_id: Number,
-    title: String,
-    body: String,
-    publish_immediately: Boolean,
-    tags: [String]
-  };
-
-  it('should validate correct blob', function () {
-    var blob = {
-      article_id: 123,
-      title: 'Another blog post',
-      body: 'Test body',
-      publish_immediately: true,
-      tags: ['nodejs', 'test']
+  describe('Basic', function () {
+    var simple = {
+      alias: /^[a-z0-9]+$/,
+      name: String,
+      admin: Boolean,
+      age: Number
     };
 
-    paperwork.invalid(blob, blogPostTemplate).should.eql([]);
-  });
+    it('should validate correct blob', function (done) {
+      var blob = {
+        alias: 'test',
+        name: 'Test User',
+        admin: false,
+        age: 31
+      };
 
-  it('should invalidate missing blob', function () {
-    paperwork.invalid(null, blogPostTemplate).should.eql(['article_id', 'title', 'body', 'publish_immediately', 'tags']);
-  });
+      paperwork(simple, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.eql(blob);
+        done();
+      });
+    });
 
-  it('should invalidate blob with missing field', function () {
-    var blob = {
-      article_id: 123,
-      title: 'Another blog post',
-      publish_immediately: true,
-      tags: ['nodejs', 'test']
-    };
-
-    paperwork.invalid(blob, blogPostTemplate).should.eql(['body']);
-  });
-
-  it('should invalidate blob with multiple missing fields', function () {
-    var blob = {
-      title: 'Another blog post',
-      publish_immediately: true,
-      tags: ['nodejs', 'test']
-    };
-
-    paperwork.invalid(blob, blogPostTemplate).should.eql(['article_id', 'body']);
-  });
-
-  it('should invalidate blob with bad type', function () {
-    var blob = {
-      article_id: '123',
-      title: 'Another blog post',
-      body: 'Test body',
-      publish_immediately: true,
-      tags: ['nodejs', 'test']
-    };
-
-    paperwork.invalid(blob, blogPostTemplate).should.eql(['article_id']);
-  });
-
-  var userProfileTemplate = {
-    email: /[^@]+@[^@]+/,
-    name: String,
-    age: Number,
-    phone: paperwork.optional(String),
-    country: paperwork.optional(/^[a-z]{2}$/)
-  };
-
-  it('should validate blob with regex', function () {
-    var blob = {
-      email: 'someone@somewhere.com',
-      name: 'Test User',
-      age: 32,
-      admin: true,
-      phone: '1234',
-      country: 'fr'
-    };
-
-    paperwork.invalid(blob, userProfileTemplate).should.eql([]);
-  });
-
-  it('should invalidate blob with bad regex', function () {
-    var blob = {
-      email: 'someone (at) somewhere.com',
-      name: 'Test User',
-      age: 32,
-      admin: true,
-      phone: '1234',
-      country: 'frz'
-    };
-
-    paperwork.invalid(blob, userProfileTemplate).should.eql(['email', 'country']);
-  });
-
-  it('should ignore omitted optional fields', function () {
-    paperwork.invalid({
-      email: 'someone@somewhere.com',
-      alias: 'test',
-      name: 'Test User',
-      age: 32,
-      admin: true,
-      country: 'be'
-    }, userProfileTemplate).should.eql([]);
-  });
-
-  it('should invalidate bad optional fields', function () {
-    paperwork.invalid({
-      email: 'someone@somewhere.com',
-      alias: 'test',
-      name: 'Test User',
-      age: 32,
-      admin: true,
-      phone: 1234
-    }, userProfileTemplate).should.eql(['phone']);
-  });
-
-  var nestedTemplate = {
-    email: /[^@]+@[^@]+/,
-    name: String,
-    age: function (age) {
-      return age > 0;
-    },
-    config: paperwork.optional({
-      user: String,
-      password: String,
-      flags: [Boolean],
-      thing: {foo: String}
+    it('should invalidate missing blob', function (done) {
+      paperwork(simple, null, function (err) {
+        should.exist(err);
+        err.should.eql(['body: should be an object']);
+        done();
+      });
     })
-  };
 
-  it('should validate nested spec', function () {
-    paperwork.invalid({
-      email: 'someone@somewhere.com',
-      alias: 'test',
-      name: 'Test User',
-      age: 32,
-      config: {
-        user: 'front',
-        password: 'password',
-        flags: [true, true, false],
-        thing: {foo: 'bar'}
+    it('should invalidate blob with one missing field', function (done) {
+      var blob = {
+        alias: 'test',
+        admin: true,
+        age: 31
+      };
+
+      paperwork(simple, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.name: missing']);
+        done();
+      });
+    });
+
+    it('should invalidate blob with two missing fields', function (done) {
+      var blob = {
+        name: 'Test User',
+        admin: true
+      };
+
+      paperwork(simple, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.alias: missing', 'body.age: missing']);
+        done();
+      });
+    });
+
+    it('should invalidate blob with bad regexp', function (done) {
+      var blob = {
+        alias: 'test/',
+        name: 'Test User',
+        admin: true,
+        age: 31
+      };
+
+      paperwork(simple, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.alias: should match /^[a-z0-9]+$/']);
+        done();
+      });
+    });
+
+    it('should invalidate blob with multiple errors', function (done) {
+      var blob = {
+        alias: 'test-',
+        admin: 'true',
+        age: '31'
+      };
+
+      paperwork(simple, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.alias: should match /^[a-z0-9]+$/', 'body.name: missing', 'body.admin: should be a boolean', 'body.age: should be a number']);
+        done();
+      });
+    });
+
+    it('should remove properties not in spec', function (done) {
+      var blob = {
+        id: 53,
+        alias: 'test',
+        name: 'Test User',
+        admin: true,
+        age: 32
+      };
+
+      paperwork(simple, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.not.have.property('id');
+        validated.should.have.property('alias', 'test');
+        validated.should.have.property('age', 32);
+        done();
+      });
+    });
+  });
+
+  describe('Optional', function () {
+    var withOption = {
+      alias: /^[a-z0-9]+$/,
+      name: String,
+      admin: Boolean,
+      country: paperwork.optional(/^[a-z]{2}$/)
+    }
+
+    it('should validate blob with optional spec', function (done) {
+      var blob = {
+        alias: 'test',
+        name: 'Test User',
+        admin: true,
+        country: 'be'
+      };
+
+      paperwork(withOption, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.eql(blob);
+        done();
+      });
+    });
+
+    it('should validate blob without optional spec', function (done) {
+      var blob = {
+        alias: 'test',
+        name: 'Test User',
+        admin: true
+      };
+
+      paperwork(withOption, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.have.property('alias', 'test');
+        validated.should.have.property('name', 'Test User');
+        validated.should.have.property('admin', true);
+        validated.should.have.property('country', null);
+        done();
+      });
+    });
+
+    it('should invalidate bad optional specs', function (done) {
+      var blob = {
+        alias: 'test',
+        name: 'Test User',
+        admin: true,
+        country: 'thisistoolong'
+      };
+
+      paperwork(withOption, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.country: should match /^[a-z]{2}$/']);
+        done();
+      });
+    });
+  });
+
+  describe('Advanced', function() {
+    var custom = {
+      alias: function longer_than_3(alias) {
+        return alias.length > 3;
       }
-    }, nestedTemplate).should.eql([]);
-  });
+    };
 
-  it('should invalidate nested missing field', function () {
-    paperwork.invalid({
-      email: 'someone@somewhere.com',
-      alias: 'test',
-      name: 'Test User',
-      age: 32,
+    var nested = {
+      inboxes: [String],
       config: {
-        user: 'front',
-        flags: [true, true, false],
-        thing: {foo: 'bar'}
+        user: String,
+        password: String,
+        flags: [Boolean],
+        thing: {foo: String}
       }
-    }, nestedTemplate).should.eql(['config']);
+    };
+
+    it('should invalidate blob with custom validator', function (done) {
+      var blob = {
+        alias: 'bad'
+      };
+
+      paperwork(custom, blob, function (err) {
+        should.exist(err);
+        err.should.eql(['body.alias: failed longer_than_3']);
+        done();
+      });
+    });
+
+    it('should validate blob with custom validator', function (done) {
+      var blob = {
+        alias: 'good'
+      };
+
+      paperwork(custom, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.eql(blob);
+        done();
+      });
+    });
+
+    it('should validate nested spec', function (done) {
+      var blob = {
+        inboxes: ['contact', 'support'],
+        config: {
+          user: 'front',
+          password: 'password',
+          flags: [true, true, false],
+          thing: {foo: 'bar'}
+        }
+      };
+
+      paperwork(nested, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.eql(blob);
+        done();
+      });
+    });
+
+    it('should remove extra fields from nested spec', function (done) {
+      var blob = {
+        id: 123,
+        inboxes: ['contact', 'support'],
+        config: {
+          extra: true,
+          user: 'front',
+          password: 'password',
+          flags: [true, true, false],
+          thing: {id: 4, foo: 'bar'}
+        }
+      };
+
+      paperwork(nested, blob, function (err, validated) {
+        should.not.exist(err);
+        should.exist(validated);
+        validated.should.not.have.property('id');
+        validated.should.have.property('config');
+        validated.config.should.not.have.property('extra');
+        validated.config.should.have.property('thing');
+        validated.config.thing.should.not.have.property('id');
+        validated.config.thing.should.have.property('foo', 'bar');
+        done();
+      });
+    });
+
+    it('should invalidate nested missing field', function (done) {
+      var blob = {
+        inboxes: ['contact', 'support'],
+        config: {
+          user: 'front',
+          flags: [true, true, false],
+          thing: {foo: 'bar'}
+        }
+      };
+
+      paperwork(nested, blob, function  (err) {
+        should.exist(err);
+        err.should.eql(['body.config.password: missing']);
+        done();
+      });
+    });
   });
 
-  it('should invalidate nested invalid field', function () {
-    paperwork.invalid({
-      email: 'someone@somewhere.com',
-      alias: 'test',
-      name: 'Test User',
-      age: 32,
-      config: {
-        user: 'front',
-        password: 'password',
-        flags: [true, true, 'oops'],
-        thing: {foo: 'bar'}
-      }
-    }, nestedTemplate).should.eql(['config']);
-  });
+  describe('Express', function () {
+    var simple = {
+      alias: /^[a-z0-9]+$/,
+      name: String,
+      admin: Boolean,
+      age: Number
+    };
 
-  var multipleConditionTemplate = {
-    a: Number,
-    b: paperwork.all(Number, function (val) {
-      return val % 3 === 0;
-    })
-  };
+    it('should validate with Express middleware', function (done) {
+      var fakeReq = {
+        body: {
+          alias: 'laurent',
+          name: 'Laurent Perrin',
+          admin: false,
+          age: 32
+        }
+      };
 
-  it('should validate multiple conditions', function  () {
-    paperwork.invalid({
-      a: 10,
-      b: 9
-    }, multipleConditionTemplate).should.eql([]);
-  });
+      var fakeRes = {
+        send: function (code, json) {
+          done(new Error('res.send() should not have been called'));
+        }
+      };
 
-  it('should invalidate multiple conditions', function  () {
-    paperwork.invalid({
-      a: 10,
-      b: 10
-    }, multipleConditionTemplate).should.eql(['b']);
+      paperwork.accept(simple)(fakeReq, fakeRes, function () {
+        should.exist(fakeReq.body);
+        fakeReq.body.should.have.property('alias', 'laurent');
+        fakeReq.body.should.have.property('admin', false);
+        done();
+      });
+    });
+
+    it('should remove extra fields', function (done) {
+      var fakeReq = {
+        body: {
+          id: 123,
+          alias: 'laurent',
+          name: 'Laurent Perrin',
+          admin: false,
+          age: 32
+        }
+      };
+
+      var fakeRes = {
+        send: function (code, json) {
+          done(new Error('res.send() should not have been called'));
+        }
+      };
+
+      paperwork.accept(simple)(fakeReq, fakeRes, function () {
+        should.exist(fakeReq.body);
+        fakeReq.body.should.have.property('alias', 'laurent');
+        fakeReq.body.should.have.property('admin', false);
+        fakeReq.body.should.not.have.property('id');
+        done();
+      });
+    });
+
+    it('should invalidate with Express middleware', function (done) {
+      var fakeReq = {
+        body: {
+          alias: /laurent;/,
+          name: 'Laurent Perrin',
+          admin: false,
+          age: 32
+        }
+      };
+
+      var fakeRes = {
+        send: function (code, json) {
+          code.should.eql(400);
+          done();
+        }
+      };
+
+      paperwork.accept(simple)(fakeReq, fakeRes, function () {
+        done(new Error('done() should not have been called'));
+      });
+    });
   });
 });
