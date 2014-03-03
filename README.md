@@ -13,6 +13,11 @@ If you build a REST API with node.js, you'll end up validating JSON sooner or la
 - It was easy for people consuming the API to understand why their request was rejected.
 - You didn't have to write boilerplate code.
 
+Install
+-------
+
+`npm install paperwork`
+
 How it works
 ------------
 
