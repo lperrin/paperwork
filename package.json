@@ -1,22 +1,33 @@
 {
   "name": "paperwork",
   "description": "Lightweight JSON validation for REST APIs.",
-  "keywords": ["rest", "validation", "json", "api", "express"],
+  "keywords": [
+    "rest",
+    "validation",
+    "json",
+    "api",
+    "express"
+  ],
   "version": "2.0.1",
   "author": "Laurent Perrin <laurent.perrin@gmail.com>",
   "main": "./paperwork.js",
+  "scripts": {
+    "test": "mocha test"
+  },
   "repository": {
     "type": "git",
     "url": "https://github.com/lperrin/paperwork"
   },
   "licenses": [
-    {"type": "BSD"}
+    {
+      "type": "BSD"
+    }
   ],
   "dependencies": {
     "underscore": "*"
   },
   "devDependencies": {
-    "mocha": "*",
+    "mocha": "^2.0.1",
     "should": "*"
   },
   "bugs": {
