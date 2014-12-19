@@ -1,5 +1,4 @@
 var should = require('should'),
-    assert = require('assert'),
     sinon = require('sinon'),
     paperwork = require('../paperwork');
 
