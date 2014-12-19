@@ -118,12 +118,7 @@ function paperwork(spec, val, visitor) {
 }
 
 function getFunctionName(fun) {
-  var ret = fun.toString();
-
-  ret = ret.substr('function '.length);
-  ret = ret.substr(0, ret.indexOf('('));
-
-  return ret || 'custom validator';
+  return fun.name || 'custom validator';
 }
 
 module.exports = function (spec, blob, done) {
@@ -150,7 +145,13 @@ module.exports.accept = function (spec) {
       return next();
     }
 
-    res.send(400, {status: 'bad_request', reason: 'Body did not satisfy requirements', errors: visitor.errors});
+    res.statusCode = 400;
+    var response = {
+      status: 'bad_request',
+      reason: 'Body did not satisfy requirements',
+      errors: visitor.errors
+    }
+    res.end(JSON.stringify({status: 'bad_request', reason: 'Body did not satisfy requirements', errors: visitor.errors}, null, '  '))
   };
 };
 
