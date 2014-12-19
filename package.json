@@ -28,7 +28,9 @@
   },
   "devDependencies": {
     "mocha": "^2.0.1",
-    "should": "*"
+    "node-mocks-http": "^1.2.1",
+    "should": "*",
+    "sinon": "^1.12.2"
   },
   "bugs": {
     "url": "https://github.com/lperrin/paperwork/issues"

@@ -1,4 +1,6 @@
 var should = require('should'),
+    assert = require('assert'),
+    sinon = require('sinon'),
     paperwork = require('../paperwork');
 
 describe('Paperwork', function () {
@@ -274,6 +276,7 @@ describe('Paperwork', function () {
   });
 
   describe('Express', function () {
+    var httpMocks = require('node-mocks-http');
     var simple = {
       alias: /^[a-z0-9]+$/,
       name: String,
@@ -291,16 +294,17 @@ describe('Paperwork', function () {
         }
       };
 
-      var fakeRes = {
-        send: function (code, json) {
-          done(new Error('res.send() should not have been called'));
-        }
-      };
+      var fakeRes = httpMocks.createResponse();
+      sinon.spy(fakeRes, 'send');
+      sinon.spy(fakeRes, 'end');
 
       paperwork.accept(simple)(fakeReq, fakeRes, function () {
         should.exist(fakeReq.body);
         fakeReq.body.should.have.property('alias', 'laurent');
         fakeReq.body.should.have.property('admin', false);
+        fakeRes.send.called.should.equal(false, 'res.send() should not have been called');
+        fakeRes.end.called.should.equal(false, 'res.end() should not have been called');
+        fakeRes._getData().should.equal('');
         done();
       });
     });
@@ -331,7 +335,7 @@ describe('Paperwork', function () {
       });
     });
 
-    it('should invalidate with Express middleware', function (done) {
+    it('should invalidate with Express middleware', function () {
       var fakeReq = {
         body: {
           alias: /laurent;/,
@@ -341,16 +345,16 @@ describe('Paperwork', function () {
         }
       };
 
-      var fakeRes = {
-        send: function (code, json) {
-          code.should.eql(400);
-          done();
-        }
-      };
+      var fakeRes = httpMocks.createResponse();
+      sinon.spy(fakeRes, 'end')
 
       paperwork.accept(simple)(fakeReq, fakeRes, function () {
         done(new Error('done() should not have been called'));
       });
+
+      fakeRes.statusCode.should.equal(400, 'status code should be 400');
+      fakeRes.end.called.should.equal(true, 'end() should have been called');
+      fakeRes._getData().should.match(/bad_request/)
     });
   });
 });
