@@ -118,12 +118,7 @@ function paperwork(spec, val, visitor) {
 }
 
 function getFunctionName(fun) {
-  var ret = fun.toString();
-
-  ret = ret.substr('function '.length);
-  ret = ret.substr(0, ret.indexOf('('));
-
-  return ret || 'custom validator';
+  return fun.name || 'custom validator';
 }
 
 module.exports = function (spec, blob, done) {
