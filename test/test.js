@@ -356,4 +356,40 @@ describe('Paperwork', function () {
       fakeRes._getData().should.match(/bad_request/)
     });
   });
+
+  describe('.validator()', function () {
+    var simple = {
+      alias: /^[a-z0-9]+$/,
+      name: String,
+      admin: Boolean,
+      age: Number
+    };
+
+    it('should return a function', function () {
+      var validator = paperwork.validator(simple);
+      validator.should.be.a.Function
+    });
+
+    it('should validate a given document', function (done) {
+      var validator = paperwork.validator(simple);
+      validator({
+        alias: 'floby',
+        name: 'Florent Jaby',
+        admin: false,
+        age: 25
+      }, done);
+    });
+
+    it('should invalidate a given document', function (done) {
+      var validator = paperwork.validator(simple);
+      validator({
+        name: 'Florent Jaby',
+        admin: false,
+        age: false
+      }, function (err) {
+        err.should.not.be.Undefined
+        done();
+      });
+    });
+  });
 });

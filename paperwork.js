@@ -155,6 +155,10 @@ module.exports.accept = function (spec) {
   };
 };
 
+module.exports.validator = function (spec) {
+  return module.exports.bind(null, spec);
+};
+
 module.exports.optional = function (spec) {
   return new Optional(spec);
 };
