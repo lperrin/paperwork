@@ -146,12 +146,13 @@ module.exports.accept = function (spec) {
     }
 
     res.statusCode = 400;
+    res.setHeader('Content-Type', 'application/json');
     var response = {
       status: 'bad_request',
       reason: 'Body did not satisfy requirements',
       errors: visitor.errors
     }
-    res.end(JSON.stringify({status: 'bad_request', reason: 'Body did not satisfy requirements', errors: visitor.errors}, null, '  '))
+    res.end(JSON.stringify(response));
   };
 };
 

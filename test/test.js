@@ -353,7 +353,7 @@ describe('Paperwork', function () {
 
       fakeRes.statusCode.should.equal(400, 'status code should be 400');
       fakeRes.end.called.should.equal(true, 'end() should have been called');
-      fakeRes._getData().should.match(/bad_request/)
+      fakeRes._getData().should.match(/bad_request/);
     });
   });
 
