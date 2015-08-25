@@ -351,9 +351,11 @@ describe('Paperwork', function () {
         done(new Error('done() should not have been called'));
       });
 
-      fakeRes.statusCode.should.equal(400, 'status code should be 400');
-      fakeRes.end.called.should.equal(true, 'end() should have been called');
-      fakeRes._getData().should.match(/bad_request/);
+      setImmediate(function () {
+        fakeRes.statusCode.should.equal(400, 'status code should be 400');
+        fakeRes.end.called.should.equal(true, 'end() should have been called');
+        fakeRes._getData().should.match(/bad_request/);
+      });
     });
   });
 
